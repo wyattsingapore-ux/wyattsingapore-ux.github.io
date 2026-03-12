@@ -55,6 +55,16 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0; }
         }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body class="bg-white text-charcoal font-body overflow-x-hidden">
@@ -183,15 +193,17 @@
 
             <div class="bg-softGray rounded-3xl p-6 lg:p-10 shadow-2xl border border-gray-100">
                 <!-- Chat Window -->
-                <div id="chat-window" class="space-y-6 h-[450px] overflow-y-auto mb-8 pr-4 custom-scrollbar">
+                <div id="chat-window" class="space-y-6 h-[450px] overflow-y-auto mb-8 pr-4 custom-scrollbar bg-white rounded-2xl p-6 shadow-inner border border-gray-50">
                     <div class="flex items-start space-x-4">
                         <div class="w-10 h-10 bg-msBlue rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-md">AI</div>
-                        <div class="bg-white p-5 rounded-2xl rounded-tl-none shadow-sm border border-gray-100 text-sm leading-relaxed max-w-[85%]">
-                            Hello! I am your Dynamics 365 Implementation Assistant. I've analyzed the research by Rahul Mohta and others. You can ask me things like:
+                        <div class="bg-softGray p-5 rounded-2xl rounded-tl-none border border-gray-100 text-sm leading-relaxed max-w-[85%]">
+                            Hello! I am your Dynamics 365 Implementation Assistant. I have indexed the research by Rahul Mohta, Yogesh Kasat, and JJ Yadav. 
+                            <br><br>
+                            How can I help you today? You might want to ask about <strong>CRP phases</strong>, <strong>LCS setup</strong>, or <strong>Data Migration strategies</strong>.
                             <div class="mt-4 flex flex-wrap gap-2">
-                                <button onclick="setQuery('How do I manage the CRP process?')" class="text-xs bg-msBlue/5 text-msBlue px-3 py-1 rounded-full border border-msBlue/10 hover:bg-msBlue hover:text-white transition-all">"How do I manage the CRP process?"</button>
-                                <button onclick="setQuery('What is Lifecycle Services (LCS)?')" class="text-xs bg-msBlue/5 text-msBlue px-3 py-1 rounded-full border border-msBlue/10 hover:bg-msBlue hover:text-white transition-all">"What is Lifecycle Services (LCS)?"</button>
-                                <button onclick="setQuery('Explain the RTM importance.')" class="text-xs bg-msBlue/5 text-msBlue px-3 py-1 rounded-full border border-msBlue/10 hover:bg-msBlue hover:text-white transition-all">"Explain the RTM importance."</button>
+                                <button onclick="setQuery('Explain the 3 phases of Conference Room Pilots (CRP).')" class="text-xs bg-msBlue/5 text-msBlue px-3 py-1 rounded-full border border-msBlue/10 hover:bg-msBlue hover:text-white transition-all">"Explain CRP phases"</button>
+                                <button onclick="setQuery('How does Lifecycle Services (LCS) help in deployment?')" class="text-xs bg-msBlue/5 text-msBlue px-3 py-1 rounded-full border border-msBlue/10 hover:bg-msBlue hover:text-white transition-all">"LCS deployment role"</button>
+                                <button onclick="setQuery('What is the Requirements Traceability Matrix (RTM)?')" class="text-xs bg-msBlue/5 text-msBlue px-3 py-1 rounded-full border border-msBlue/10 hover:bg-msBlue hover:text-white transition-all">"What is RTM?"</button>
                             </div>
                         </div>
                     </div>
@@ -209,6 +221,7 @@
                         </button>
                     </div>
                 </div>
+                <p id="error-box" class="mt-3 text-red-500 text-xs hidden text-center"></p>
             </div>
         </div>
     </section>
@@ -231,9 +244,6 @@
                     <p class="text-white/60 font-medium">Years of Evolution</p>
                 </div>
             </div>
-            <div class="mt-20 max-w-3xl mx-auto">
-                <p class="text-xl italic text-white/40">"Every business is unique; adopt an ERP that adapts to your model. Master the tools and techniques needed to ensure a predictable, high-quality implementation."</p>
-            </div>
         </div>
     </section>
 
@@ -246,19 +256,25 @@
 
     <!-- AI SCRIPTING -->
     <script>
-        const apiKey = ""; // Runtime managed
+        const apiKey = "AIzaSyDWaCG5isKRaiiViCZkTjzIodD0HTQQYoQ"; 
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
+        const errorBox = document.getElementById('error-box');
 
-        const systemPrompt = `You are a Dynamics 365 Implementation Expert. Your knowledge is based on the research 'Implementing Microsoft Dynamics 365 for Finance and Operations' by Rahul Mohta, Yogesh Kasat, and JJ Yadav. 
-        Focus on providing technical and strategic advice regarding:
-        - LCS (Lifecycle Services) methodologies.
-        - The iterative CRP (Conference Room Pilot) process.
-        - The RTM (Requirements Traceability Matrix).
-        - Modern architecture (Cloud-first, Mobile-first).
-        - Data migration strategies and cutover management.
-        Be professional, concise, and structured (use bullet points if needed). If asked about something outside the scope of D365 implementation, politely steer back to the guide.`;
+        const systemPrompt = `You are a Dynamics 365 Implementation Expert. Your knowledge is based on the book 'Implementing Microsoft Dynamics 365 for Finance and Operations' by Rahul Mohta, Yogesh Kasat, and JJ Yadav.
+        
+        Key Core Concepts to use for answers:
+        1. Lifecycle Services (LCS): The cloud-based portal used to manage the application lifecycle. It includes methodologies for Analysis, Design, Develop, Test, and Deploy.
+        2. Conference Room Pilot (CRP): An iterative prototyping approach. 
+           - CRP 1: Standard out-of-the-box features.
+           - CRP 2: Includes customizations and integrations.
+           - CRP 3: End-to-end testing with real business data.
+        3. RTM (Requirements Traceability Matrix): A tool used to track business requirements through design, development, and testing to ensure nothing is missed.
+        4. Modern Architecture: Dynamics 365 is a cloud-first, mobile-first platform using Azure, Power BI, and SQL Azure.
+        5. Data Migration: Involves Data Management Framework (DIXF) and requires careful planning for entity mapping and volume testing.
+        
+        Respond professionally using bullet points for complex answers. If the user asks a question not covered by the Dynamics 365 implementation guide, politely refocus on the methodology.`;
 
         async function callGemini(prompt, retries = 0) {
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
@@ -279,13 +295,16 @@
                         await new Promise(res => setTimeout(res, delay));
                         return callGemini(prompt, retries + 1);
                     }
-                    throw new Error('API Error');
+                    throw new Error(`API Error: ${response.status}`);
                 }
 
                 const data = await response.json();
-                return data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't generate a response. Please try again.";
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                if (!text) throw new Error("Empty response from AI");
+                return text;
             } catch (error) {
-                return "Expert service is currently busy. Please try again in a moment.";
+                console.error(error);
+                return `[Error] ${error.message}. Please check your connection or retry.`;
             }
         }
 
@@ -295,12 +314,12 @@
             
             const icon = role === 'user' ? 'U' : 'AI';
             const iconBg = role === 'user' ? 'bg-charcoal' : 'bg-msBlue';
-            const contentBg = role === 'user' ? 'bg-msBlue text-white' : 'bg-white text-charcoal shadow-sm border border-gray-100';
+            const contentBg = role === 'user' ? 'bg-msBlue text-white' : 'bg-softGray text-charcoal border border-gray-100 shadow-sm';
             const radius = role === 'user' ? 'rounded-tr-none' : 'rounded-tl-none';
 
             div.innerHTML = `
                 <div class="w-10 h-10 ${iconBg} rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs shadow-md">${icon}</div>
-                <div class="${contentBg} p-5 rounded-2xl ${radius} text-sm leading-relaxed max-w-[85%] whitespace-pre-line">
+                <div class="${contentBg} p-5 rounded-2xl ${radius} text-sm leading-relaxed max-w-[85%] whitespace-pre-wrap">
                     ${text}
                 </div>
             `;
@@ -312,21 +331,33 @@
             const query = userInput.value.trim();
             if (!query) return;
 
+            errorBox.classList.add('hidden');
             userInput.value = '';
             appendMessage('user', query);
 
+            // Add loading indicator
             const typingDiv = document.createElement('div');
             typingDiv.className = 'flex items-start space-x-4 animate-pulse';
+            typingDiv.id = 'typing-indicator';
             typingDiv.innerHTML = `
                 <div class="w-10 h-10 bg-msBlue rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-xs">AI</div>
-                <div class="bg-gray-100 p-5 rounded-2xl rounded-tl-none text-sm text-gray-400 typing-indicator">Thinking...</div>
+                <div class="bg-gray-100 p-5 rounded-2xl rounded-tl-none text-sm text-gray-400">Thinking...</div>
             `;
             chatWindow.appendChild(typingDiv);
             chatWindow.scrollTop = chatWindow.scrollHeight;
 
             const response = await callGemini(query);
-            chatWindow.removeChild(typingDiv);
-            appendMessage('bot', response);
+            
+            // Remove loading indicator
+            const indicator = document.getElementById('typing-indicator');
+            if (indicator) indicator.remove();
+
+            if (response.startsWith('[Error]')) {
+                errorBox.textContent = response;
+                errorBox.classList.remove('hidden');
+            } else {
+                appendMessage('bot', response);
+            }
         }
 
         function setQuery(text) {
